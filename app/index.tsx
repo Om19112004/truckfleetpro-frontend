@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -27,6 +27,37 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Keep the user logged in until they explicitly log out.
+  // AsyncStorage survives app restarts and removing the app from Recent Apps.
+  useEffect(() => {
+    let mounted = true;
+
+    const restoreSession = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+
+        if (token) {
+          // Existing session: skip the login screen.
+          router.replace('/dashboard');
+          return;
+        }
+      } catch (error) {
+        console.error('Session restore error:', error);
+      } finally {
+        if (mounted) {
+          setCheckingSession(false);
+        }
+      }
+    };
+
+    restoreSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleLogin = async () => {
     const cleanEmail = email.trim().toLowerCase();
@@ -83,6 +114,31 @@ await AsyncStorage.setItem('user', JSON.stringify(data.user));
       setLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return (
+      <View
+        style={[
+          styles.screen,
+          {
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text
+          style={{
+            marginTop: 12,
+            color: colors.textSecondary,
+            fontSize: 13,
+          }}
+        >
+          {hi ? 'सेशन चेक हो रहा है...' : 'Restoring session...'}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>

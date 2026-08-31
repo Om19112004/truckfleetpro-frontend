@@ -23,22 +23,11 @@ export default function AddTruckScreen() {
   const { language } = useLanguage();
   const styles = createStyles(colors, isDark);
   const [registrationNumber, setRegistrationNumber] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
-  const [truckType, setTruckType] = useState('');
   const [capacity, setCapacity] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleAddTruck = async () => {
-    if (
-      !registrationNumber.trim() ||
-      !make.trim() ||
-      !model.trim() ||
-      !year.trim() ||
-      !truckType.trim() ||
-      !capacity.trim()
-    ) {
+    if (!registrationNumber.trim() || !capacity.trim()) {
       Alert.alert(
         language === 'hi' ? 'जानकारी अधूरी है' : 'Missing information',
         language === 'hi' ? 'कृपया ट्रक की सभी जानकारी भरें।' : 'Please fill in all truck details.'
@@ -46,16 +35,7 @@ export default function AddTruckScreen() {
       return;
     }
 
-    const yearNumber = Number(year);
     const capacityNumber = Number(capacity);
-
-    if (Number.isNaN(yearNumber) || yearNumber < 1900 || yearNumber > 2100) {
-      Alert.alert(
-        language === 'hi' ? 'अमान्य वर्ष' : 'Invalid year',
-        language === 'hi' ? 'कृपया सही निर्माण वर्ष दर्ज करें।' : 'Please enter a valid truck manufacturing year.'
-      );
-      return;
-    }
 
     if (Number.isNaN(capacityNumber) || capacityNumber <= 0) {
       Alert.alert(
@@ -93,10 +73,6 @@ if (!token) {
         },
         body: JSON.stringify({
           registrationNumber: registrationNumber.trim().toUpperCase(),
-          make: make.trim(),
-          model: model.trim(),
-          year: yearNumber,
-          truckType: truckType.trim(),
           capacity: capacityNumber,
         }),
       });
@@ -205,95 +181,6 @@ if (!token) {
                 placeholder={language === 'hi' ? 'जैसे CG04AB1234' : 'e.g. CG04AB1234'}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="characters"
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Make */}
-            <Text style={[styles.label, styles.labelSpacing]}>{
-              language === 'hi' ? 'कंपनी' : 'MAKE'
-            }</Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="business-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                value={make}
-                onChangeText={setMake}
-                placeholder={language === 'hi' ? 'जैसे Tata' : 'e.g. Tata'}
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Model */}
-            <Text style={[styles.label, styles.labelSpacing]}>{
-              language === 'hi' ? 'मॉडल' : 'MODEL'
-            }</Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="car-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                value={model}
-                onChangeText={setModel}
-                placeholder={language === 'hi' ? 'जैसे Prima' : 'e.g. Prima'}
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Year */}
-            <Text style={[styles.label, styles.labelSpacing]}>{
-              language === 'hi' ? 'निर्माण वर्ष' : 'MANUFACTURING YEAR'
-            }</Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                value={year}
-                onChangeText={setYear}
-                placeholder={language === 'hi' ? 'जैसे 2024' : 'e.g. 2024'}
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numeric"
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Truck Type */}
-            <Text style={[styles.label, styles.labelSpacing]}>{
-              language === 'hi' ? 'ट्रक का प्रकार' : 'TRUCK TYPE'
-            }</Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="cube-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                value={truckType}
-                onChangeText={setTruckType}
-                placeholder={language === 'hi' ? 'जैसे Heavy Truck' : 'e.g. Heavy Truck'}
-                placeholderTextColor={colors.textMuted}
                 style={styles.input}
                 editable={!loading}
               />

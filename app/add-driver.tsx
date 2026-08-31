@@ -28,15 +28,12 @@ export default function AddDriverScreen() {
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [licenseExpiry, setLicenseExpiry] = useState('');
-  const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
 
   const hi = language === 'hi';
 
   const handleAddDriver = async () => {
-    if (!name.trim() || !phone.trim() || !licenseNumber.trim() || !licenseExpiry.trim()) {
+    if (!name.trim() || !phone.trim()) {
       Alert.alert(
         hi ? 'जानकारी अधूरी है' : 'Missing information',
         hi
@@ -70,9 +67,6 @@ export default function AddDriverScreen() {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
-          licenseNumber: licenseNumber.trim().toUpperCase(),
-          licenseExpiry: licenseExpiry.trim(),
-          address: address.trim(),
         }),
       });
 
@@ -168,8 +162,8 @@ export default function AddDriverScreen() {
 
             <Text style={styles.subtitle}>
               {hi
-                ? 'ड्राइवर की व्यक्तिगत और लाइसेंस जानकारी दर्ज करें।'
-                : "Add the driver's information and license details."}
+                ? 'ड्राइवर की मूल जानकारी दर्ज करें।'
+                : "Add the driver's basic information."}
             </Text>
           </View>
 
@@ -220,81 +214,6 @@ export default function AddDriverScreen() {
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* LICENSE */}
-            <Text style={[styles.label, styles.labelSpacing]}>
-              {hi ? 'लाइसेंस नंबर *' : 'LICENSE NUMBER *'}
-            </Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="card-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                placeholder={
-                  hi ? 'लाइसेंस नंबर दर्ज करें' : 'Enter license number'
-                }
-                placeholderTextColor={colors.textMuted}
-                value={licenseNumber}
-                onChangeText={setLicenseNumber}
-                autoCapitalize="characters"
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* EXPIRY */}
-            <Text style={[styles.label, styles.labelSpacing]}>
-              {hi ? 'लाइसेंस समाप्ति *' : 'LICENSE EXPIRY *'}
-            </Text>
-
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-                value={licenseExpiry}
-                onChangeText={setLicenseExpiry}
-                style={styles.input}
-                editable={!loading}
-              />
-            </View>
-
-            {/* ADDRESS */}
-            <Text style={[styles.label, styles.labelSpacing]}>
-              {hi ? 'पता' : 'ADDRESS'}
-            </Text>
-
-            <View style={[styles.inputWrapper, styles.addressWrapper]}>
-              <Ionicons
-                name="location-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-
-              <TextInput
-                placeholder={
-                  hi
-                    ? 'ड्राइवर का पता दर्ज करें'
-                    : "Enter driver's address"
-                }
-                placeholderTextColor={colors.textMuted}
-                value={address}
-                onChangeText={setAddress}
-                multiline
-                textAlignVertical="top"
-                style={[styles.input, styles.addressInput]}
                 editable={!loading}
               />
             </View>
@@ -490,22 +409,12 @@ const createStyles = (
       paddingHorizontal: 14,
     },
 
-    addressWrapper: {
-      minHeight: 94,
-      alignItems: 'flex-start',
-      paddingTop: 14,
-    },
-
     input: {
       flex: 1,
       minHeight: 51,
       marginLeft: 10,
       color: colors.text,
       fontSize: 14,
-    },
-
-    addressInput: {
-      minHeight: 68,
     },
 
     button: {
