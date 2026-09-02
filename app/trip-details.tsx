@@ -29,31 +29,14 @@ type Trip = {
   status?: string;
   notes?: string;
   checklist?: {
-    loadingCompleted?: boolean;
-    departed?: boolean;
-    reachedDestination?: boolean;
-    unloadingCompleted?: boolean;
-    tripCompleted?: boolean;
+    chequeReceived?: boolean;
+    chequeDeposited?: boolean;
+    moneyReceived?: boolean;
   };
-  diesel?: {
-    litres?: number | string;
-    rate?: number | string;
-    amount?: number | string;
-    odometer?: number | string;
-    fuelStation?: string;
-    date?: string;
-  };
-  payment?: {
-    chequeReceivedDate?: string;
-    partyName?: string;
-    paymentMode?: 'cash' | 'cheque' | 'online' | 'other';
-    chequeNumber?: string;
-    chequeAmount?: number | string;
-    bankDepositDate?: string;
-    accountCreditDate?: string;
-    freightAmount?: number | string;
-    paymentStatus?: 'pending' | 'cheque_received' | 'deposited' | 'credited';
-  };
+
+  partyName?: string;
+  freightAmount?: number | string;
+
   driver?: {
     _id?: string;
     name?: string;
@@ -94,28 +77,13 @@ export default function TripDetailsScreen() {
   const [notes, setNotes] = useState('');
 
   const [checklist, setChecklist] = useState({
-    loadingCompleted: false,
-    departed: false,
-    reached: false,
-    unloadingCompleted: false,
-    tripCompleted: false,
+    chequeReceived: false,
+    chequeDeposited: false,
+    moneyReceived: false,
   });
 
-  const [dieselLiters, setDieselLiters] = useState('');
-  const [dieselRate, setDieselRate] = useState('');
-  const [dieselOdometer, setDieselOdometer] = useState('');
-  const [dieselStation, setDieselStation] = useState('');
-  const [dieselDate, setDieselDate] = useState('');
-
-  const [loadingDate, setLoadingDate] = useState('');
   const [partyName, setPartyName] = useState('');
-  const [chequeReceived, setChequeReceived] = useState(false);
-  const [chequeNumber, setChequeNumber] = useState('');
-  const [chequeAmount, setChequeAmount] = useState('');
-  const [bankDepositDate, setBankDepositDate] = useState('');
-  const [accountCreditDate, setAccountCreditDate] = useState('');
   const [freightAmount, setFreightAmount] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'cheque_received' | 'deposited' | 'credited'>('pending');
   const [savingExtras, setSavingExtras] = useState(false);
 
   const loadTrip = async () => {
@@ -186,28 +154,17 @@ export default function TripDetailsScreen() {
       setNotes(loadedTrip?.notes || '');
 
       setChecklist({
-        loadingCompleted: !!loadedTrip?.checklist?.loadingCompleted,
-        departed: !!loadedTrip?.checklist?.departed,
-        reached: !!loadedTrip?.checklist?.reachedDestination,
-        unloadingCompleted: !!loadedTrip?.checklist?.unloadingCompleted,
-        tripCompleted: !!loadedTrip?.checklist?.tripCompleted,
+        chequeReceived: !!loadedTrip?.checklist?.chequeReceived,
+        chequeDeposited: !!loadedTrip?.checklist?.chequeDeposited,
+        moneyReceived: !!loadedTrip?.checklist?.moneyReceived,
       });
 
-      setDieselLiters(loadedTrip?.diesel?.litres != null ? String(loadedTrip.diesel.litres) : '');
-      setDieselRate(loadedTrip?.diesel?.rate != null ? String(loadedTrip.diesel.rate) : '');
-      setDieselOdometer(loadedTrip?.diesel?.odometer != null ? String(loadedTrip.diesel.odometer) : '');
-      setDieselStation(loadedTrip?.diesel?.fuelStation || '');
-      setDieselDate(formatDateForInput(loadedTrip?.diesel?.date));
-
-      setLoadingDate(formatDateForInput(loadedTrip?.payment?.chequeReceivedDate));
-      setPartyName(loadedTrip?.payment?.partyName || '');
-      setChequeReceived(loadedTrip?.payment?.paymentMode === 'cheque' && !!loadedTrip?.payment?.chequeNumber);
-      setChequeNumber(loadedTrip?.payment?.chequeNumber || '');
-      setChequeAmount(loadedTrip?.payment?.chequeAmount != null ? String(loadedTrip.payment.chequeAmount) : '');
-      setBankDepositDate(formatDateForInput(loadedTrip?.payment?.bankDepositDate));
-      setAccountCreditDate(formatDateForInput(loadedTrip?.payment?.accountCreditDate));
-      setFreightAmount(loadedTrip?.payment?.freightAmount != null ? String(loadedTrip.payment.freightAmount) : '');
-      setPaymentStatus(loadedTrip?.payment?.paymentStatus || 'pending');
+      setPartyName(loadedTrip?.partyName || '');
+      setFreightAmount(
+        loadedTrip?.freightAmount != null
+          ? String(loadedTrip.freightAmount)
+          : ''
+      );
     } catch (error) {
       console.error('Trip details error:', error);
 
@@ -403,77 +360,61 @@ export default function TripDetailsScreen() {
       setSavingExtras(true);
 
       const token = await AsyncStorage.getItem('authToken');
+
       if (!token) {
         router.replace('/');
         return;
       }
 
-      const litres = dieselLiters.trim() ? Number(dieselLiters) : 0;
-      const rate = dieselRate.trim() ? Number(dieselRate) : 0;
-      const dieselAmount = litres * rate;
+      const parsedFreightAmount = freightAmount.trim()
+        ? Number(freightAmount)
+        : 0;
+
+      if (
+        Number.isNaN(parsedFreightAmount) ||
+        parsedFreightAmount < 0
+      ) {
+        throw new Error(
+          hi
+            ? 'फ्रेट अमाउंट सही भरें।'
+            : 'Please enter a valid freight amount.'
+        );
+      }
 
       const payload = {
-        from: (trip?.from || trip?.startLocation || from).trim(),
-        to: (trip?.to || trip?.endLocation || to).trim(),
-        startLocation: trip?.startLocation || trip?.from || from,
-        endLocation: trip?.endLocation || trip?.to || to,
-        date: formatDateForApi(trip?.date || trip?.tripDate || date),
-        tripDate: formatDateForApi(trip?.tripDate || trip?.date || date),
-        distance: trip?.distance != null ? Number(trip.distance) : 0,
-        notes: trip?.notes || notes || '',
-
+        partyName: partyName.trim(),
+        freightAmount: parsedFreightAmount,
         checklist: {
-          loadingCompleted: !!checklist.loadingCompleted,
-          departed: !!checklist.departed,
-          reachedDestination: !!checklist.reached,
-          unloadingCompleted: !!checklist.unloadingCompleted,
-          tripCompleted: !!checklist.tripCompleted,
-        },
-
-        diesel: {
-          litres: Number.isFinite(litres) ? litres : 0,
-          rate: Number.isFinite(rate) ? rate : 0,
-          amount: Number.isFinite(dieselAmount) ? dieselAmount : 0,
-          odometer: dieselOdometer.trim() ? Number(dieselOdometer) : 0,
-          fuelStation: dieselStation.trim(),
-          date: formatDateForApi(dieselDate),
-        },
-
-        payment: {
-          partyName: partyName.trim(),
-          freightAmount: freightAmount.trim() ? Number(freightAmount) : 0,
-          paymentMode: chequeReceived ? 'cheque' : 'online',
-          paymentStatus,
-          chequeNumber: chequeNumber.trim(),
-          chequeAmount: chequeAmount.trim() ? Number(chequeAmount) : 0,
-          chequeReceivedDate: formatDateForApi(loadingDate),
-          bankDepositDate: formatDateForApi(bankDepositDate),
-          accountCreditDate: formatDateForApi(accountCreditDate),
+          chequeReceived: !!checklist.chequeReceived,
+          chequeDeposited: !!checklist.chequeDeposited,
+          moneyReceived: !!checklist.moneyReceived,
         },
       };
 
-      const response = await fetch(`${API_URL}/api/trips/${tripId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${API_URL}/api/trips/${tripId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
           data?.message ||
-          (hi ? 'ट्रिप अपडेट नहीं हो सकी।' : 'Unable to save trip updates.')
+            (hi
+              ? 'ट्रिप अपडेट नहीं हो सकी।'
+              : 'Unable to save trip updates.')
         );
       }
 
-      // IMPORTANT:
-      // The backend returns the saved MongoDB document. Put that exact
-      // document into local state so the screen changes immediately.
       const updatedTrip = data?.trip;
 
       if (!updatedTrip) {
@@ -485,53 +426,18 @@ export default function TripDetailsScreen() {
       }
 
       setTrip(updatedTrip);
-
-      // Keep every editable field synchronized with the saved document.
-      setChecklist({
-        loadingCompleted: !!updatedTrip.checklist?.loadingCompleted,
-        departed: !!updatedTrip.checklist?.departed,
-        reached: !!updatedTrip.checklist?.reachedDestination,
-        unloadingCompleted: !!updatedTrip.checklist?.unloadingCompleted,
-        tripCompleted: !!updatedTrip.checklist?.tripCompleted,
-      });
-
-      setDieselLiters(
-        updatedTrip.diesel?.litres != null
-          ? String(updatedTrip.diesel.litres)
-          : ''
-      );
-      setDieselRate(
-        updatedTrip.diesel?.rate != null
-          ? String(updatedTrip.diesel.rate)
-          : ''
-      );
-      setDieselOdometer(
-        updatedTrip.diesel?.odometer != null
-          ? String(updatedTrip.diesel.odometer)
-          : ''
-      );
-      setDieselStation(updatedTrip.diesel?.fuelStation || '');
-      setDieselDate(formatDateForInput(updatedTrip.diesel?.date));
-
-      setPartyName(updatedTrip.payment?.partyName || '');
+      setPartyName(updatedTrip.partyName || '');
       setFreightAmount(
-        updatedTrip.payment?.freightAmount != null
-          ? String(updatedTrip.payment.freightAmount)
+        updatedTrip.freightAmount != null
+          ? String(updatedTrip.freightAmount)
           : ''
       );
-      setChequeReceived(updatedTrip.payment?.paymentMode === 'cheque');
-      setChequeNumber(updatedTrip.payment?.chequeNumber || '');
-      setChequeAmount(
-        updatedTrip.payment?.chequeAmount != null
-          ? String(updatedTrip.payment.chequeAmount)
-          : ''
-      );
-      setLoadingDate(formatDateForInput(updatedTrip.payment?.chequeReceivedDate));
-      setBankDepositDate(formatDateForInput(updatedTrip.payment?.bankDepositDate));
-      setAccountCreditDate(formatDateForInput(updatedTrip.payment?.accountCreditDate));
-      setPaymentStatus(
-        updatedTrip.payment?.paymentStatus || 'pending'
-      );
+
+      setChecklist({
+        chequeReceived: !!updatedTrip.checklist?.chequeReceived,
+        chequeDeposited: !!updatedTrip.checklist?.chequeDeposited,
+        moneyReceived: !!updatedTrip.checklist?.moneyReceived,
+      });
 
       Alert.alert(
         hi ? 'सफल' : 'Saved',
@@ -541,6 +447,7 @@ export default function TripDetailsScreen() {
       );
     } catch (error) {
       console.error('Save trip extras error:', error);
+
       Alert.alert(
         hi ? 'त्रुटि' : 'Save failed',
         error instanceof Error
@@ -558,7 +465,6 @@ export default function TripDetailsScreen() {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const dieselAmount = (Number(dieselLiters) || 0) * (Number(dieselRate) || 0);
 
   const changeStatus = (newStatus: string) => {
     Alert.alert(
@@ -1048,96 +954,76 @@ export default function TripDetailsScreen() {
             <View style={styles.featureCard}>
               <View style={styles.featureHeader}>
                 <View style={styles.featureIcon}>
-                  <Ionicons name="checkmark-done-outline" size={19} color={colors.primary} />
+                  <Ionicons
+                    name="checkmark-done-outline"
+                    size={19}
+                    color={colors.primary}
+                  />
                 </View>
+
                 <View style={styles.featureHeaderText}>
-                  <Text style={styles.featureTitle}>{hi ? 'ट्रिप चेकलिस्ट' : 'Trip Checklist'}</Text>
-                  <Text style={styles.featureSubtitle}>{hi ? 'ट्रिप की प्रगति अपडेट करें' : 'Update the journey progress'}</Text>
+                  <Text style={styles.featureTitle}>
+                    {hi ? 'ट्रिप चेकलिस्ट' : 'Trip Checklist'}
+                  </Text>
+
+                  <Text style={styles.featureSubtitle}>
+                    {hi
+                      ? 'पार्टी और पेमेंट प्रगति अपडेट करें'
+                      : 'Update party, freight and payment progress'}
+                  </Text>
                 </View>
               </View>
 
-              <ChecklistRow label={hi ? 'लोडिंग पूरी' : 'Loading completed'} checked={checklist.loadingCompleted} onPress={() => toggleChecklist('loadingCompleted')} styles={styles} colors={colors} />
-              <ChecklistRow label={hi ? 'ट्रक रवाना' : 'Truck departed'} checked={checklist.departed} onPress={() => toggleChecklist('departed')} styles={styles} colors={colors} />
-              <ChecklistRow label={hi ? 'गंतव्य पहुंच गया' : 'Reached destination'} checked={checklist.reached} onPress={() => toggleChecklist('reached')} styles={styles} colors={colors} />
-              <ChecklistRow label={hi ? 'अनलोडिंग पूरी' : 'Unloading completed'} checked={checklist.unloadingCompleted} onPress={() => toggleChecklist('unloadingCompleted')} styles={styles} colors={colors} />
-              <ChecklistRow label={hi ? 'ट्रिप पूरी' : 'Trip completed'} checked={checklist.tripCompleted} onPress={() => toggleChecklist('tripCompleted')} styles={styles} colors={colors} />
-            </View>
+              <EditField
+                label={hi ? 'पार्टी नाम' : 'PARTY NAME'}
+                value={partyName}
+                onChangeText={setPartyName}
+                icon="business-outline"
+                styles={styles}
+                colors={colors}
+              />
 
-            {/* DIESEL */}
-            <View style={styles.featureCard}>
-              <View style={styles.featureHeader}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name="water-outline" size={19} color={colors.primary} />
-                </View>
-                <View style={styles.featureHeaderText}>
-                  <Text style={styles.featureTitle}>{hi ? 'डीज़ल' : 'Diesel'}</Text>
-                  <Text style={styles.featureSubtitle}>{hi ? 'इस ट्रिप में लगा ईंधन' : 'Fuel used for this trip'}</Text>
-                </View>
-              </View>
+              <EditField
+                label={hi ? 'फ्रेट अमाउंट' : 'FREIGHT AMOUNT'}
+                value={freightAmount}
+                onChangeText={setFreightAmount}
+                icon="cash-outline"
+                keyboardType="decimal-pad"
+                styles={styles}
+                colors={colors}
+              />
 
-              <View style={styles.twoColumn}>
-                <View style={styles.columnField}>
-                  <Text style={styles.smallLabel}>{hi ? 'लीटर' : 'LITRES'}</Text>
-                  <TextInput value={dieselLiters} onChangeText={setDieselLiters} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.textMuted} style={styles.featureInput} />
-                </View>
-                <View style={styles.columnField}>
-                  <Text style={styles.smallLabel}>{hi ? 'रेट / लीटर' : 'RATE / LITRE'}</Text>
-                  <TextInput value={dieselRate} onChangeText={setDieselRate} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.textMuted} style={styles.featureInput} />
-                </View>
-              </View>
+              <ChecklistRow
+                label={hi ? 'चेक प्राप्त हो गया' : 'Cheque Received'}
+                checked={checklist.chequeReceived}
+                onPress={() => toggleChecklist('chequeReceived')}
+                styles={styles}
+                colors={colors}
+              />
 
-              <View style={styles.calculatedRow}>
-                <Text style={styles.calculatedLabel}>{hi ? 'कुल डीज़ल खर्च' : 'TOTAL DIESEL COST'}</Text>
-                <Text style={styles.calculatedValue}>₹{dieselAmount.toFixed(2)}</Text>
-              </View>
+              <ChecklistRow
+                label={
+                  hi
+                    ? 'चेक बैंक में जमा हो गया'
+                    : 'Cheque Bank Mein Deposit Ho Gaya'
+                }
+                checked={checklist.chequeDeposited}
+                onPress={() => toggleChecklist('chequeDeposited')}
+                styles={styles}
+                colors={colors}
+              />
 
-              <EditField label={hi ? 'ओडोमीटर' : 'ODOMETER'} value={dieselOdometer} onChangeText={setDieselOdometer} icon="speedometer-outline" keyboardType="numeric" styles={styles} colors={colors} />
-              <EditField label={hi ? 'फ्यूल स्टेशन' : 'FUEL STATION'} value={dieselStation} onChangeText={setDieselStation} icon="business-outline" styles={styles} colors={colors} />
-              <EditField label={hi ? 'डीज़ल तारीख' : 'DIESEL DATE'} value={dieselDate} onChangeText={setDieselDate} icon="calendar-outline" styles={styles} colors={colors} />
-            </View>
-
-            {/* PAYMENT */}
-            <View style={styles.featureCard}>
-              <View style={styles.featureHeader}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name="cash-outline" size={19} color={colors.primary} />
-                </View>
-                <View style={styles.featureHeaderText}>
-                  <Text style={styles.featureTitle}>{hi ? 'पेमेंट' : 'Payment'}</Text>
-                  <Text style={styles.featureSubtitle}>{hi ? 'बाद में भी भर सकते हैं' : 'Can be completed after the trip'}</Text>
-                </View>
-                <View style={[styles.paymentBadge, { backgroundColor: paymentStatus === 'credited' ? (isDark ? '#193B2B' : '#E8F8EF') : isDark ? '#3A3118' : '#FFF6D8' }]}>
-                  <Text style={[styles.paymentBadgeText, { color: paymentStatus === 'credited' ? colors.success : colors.warning }]}>{paymentStatus.toUpperCase()}</Text>
-                </View>
-              </View>
-
-              <EditField label={hi ? 'लोडिंग तारीख' : 'LOADING DATE'} value={loadingDate} onChangeText={setLoadingDate} icon="calendar-outline" styles={styles} colors={colors} />
-              <EditField label={hi ? 'पार्टी नाम' : 'PARTY NAME'} value={partyName} onChangeText={setPartyName} icon="business-outline" styles={styles} colors={colors} />
-              <EditField label={hi ? 'फ्रेट अमाउंट' : 'FREIGHT AMOUNT'} value={freightAmount} onChangeText={setFreightAmount} icon="cash-outline" keyboardType="decimal-pad" styles={styles} colors={colors} />
-
-              <Pressable style={styles.checkRow} onPress={() => setChequeReceived(!chequeReceived)}>
-                <View style={[styles.checkbox, chequeReceived && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-                  {chequeReceived && <Ionicons name="checkmark" size={15} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.checkRowText}>{hi ? 'चेक प्राप्त हो गया' : 'Cheque received'}</Text>
-              </Pressable>
-
-              {chequeReceived && (
-                <>
-                  <EditField label={hi ? 'चेक नंबर' : 'CHEQUE NUMBER'} value={chequeNumber} onChangeText={setChequeNumber} icon="card-outline" styles={styles} colors={colors} />
-                  <EditField label={hi ? 'चेक अमाउंट' : 'CHEQUE AMOUNT'} value={chequeAmount} onChangeText={setChequeAmount} icon="cash-outline" keyboardType="decimal-pad" styles={styles} colors={colors} />
-                  <EditField label={hi ? 'बैंक में जमा तारीख' : 'BANK DEPOSIT DATE'} value={bankDepositDate} onChangeText={setBankDepositDate} icon="calendar-outline" styles={styles} colors={colors} />
-                  <EditField label={hi ? 'अकाउंट में क्रेडिट तारीख' : 'ACCOUNT CREDIT DATE'} value={accountCreditDate} onChangeText={setAccountCreditDate} icon="calendar-outline" styles={styles} colors={colors} />
-                </>
-              )}
-
-              <View style={styles.statusOptions}>
-                {(['pending', 'cheque_received', 'deposited', 'credited'] as const).map(item => (
-                  <Pressable key={item} style={[styles.statusOption, paymentStatus === item && { borderColor: colors.primary, backgroundColor: isDark ? '#102C48' : '#EDF5FF' }]} onPress={() => setPaymentStatus(item)}>
-                    <Text style={[styles.statusOptionText, paymentStatus === item && { color: colors.primary }]}>{item.toUpperCase()}</Text>
-                  </Pressable>
-                ))}
-              </View>
+              <ChecklistRow
+                label={
+                  hi
+                    ? 'बैंक में पैसा प्राप्त हो गया'
+                    : 'Bank Mein Money Received Ho Gaya'
+                }
+                checked={checklist.moneyReceived}
+                onPress={() => toggleChecklist('moneyReceived')}
+                styles={styles}
+                colors={colors}
+              />
             </View>
 
             <Pressable style={styles.saveExtrasButton} disabled={savingExtras} onPress={saveTripExtras}>
@@ -1809,104 +1695,6 @@ const createStyles = (
       borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-
-    twoColumn: {
-      flexDirection: 'row',
-      gap: 10,
-    },
-
-    columnField: {
-      flex: 1,
-    },
-
-    smallLabel: {
-      color: colors.textMuted,
-      fontSize: 7,
-      fontWeight: '900',
-      letterSpacing: 0.7,
-      marginBottom: 6,
-    },
-
-    featureInput: {
-      minHeight: 46,
-      borderRadius: 13,
-      backgroundColor: colors.background,
-      borderWidth: 1,
-      borderColor: colors.border,
-      color: colors.text,
-      fontSize: 11,
-      paddingHorizontal: 12,
-    },
-
-    calculatedRow: {
-      marginTop: 10,
-      marginBottom: 8,
-      padding: 12,
-      borderRadius: 13,
-      backgroundColor: isDark ? '#102C48' : '#EDF5FF',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-
-    calculatedLabel: {
-      color: colors.textMuted,
-      fontSize: 7,
-      fontWeight: '900',
-    },
-
-    calculatedValue: {
-      color: colors.primary,
-      fontSize: 13,
-      fontWeight: '900',
-    },
-
-    paymentBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius: 8,
-    },
-
-    paymentBadgeText: {
-      fontSize: 7,
-      fontWeight: '900',
-    },
-
-    checkRow: {
-      minHeight: 45,
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 10,
-    },
-
-    checkRowText: {
-      marginLeft: 10,
-      color: colors.textSecondary,
-      fontSize: 10,
-      fontWeight: '800',
-    },
-
-    statusOptions: {
-      flexDirection: 'row',
-      gap: 8,
-      marginTop: 2,
-    },
-
-    statusOption: {
-      flex: 1,
-      minHeight: 38,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-
-    statusOptionText: {
-      color: colors.textMuted,
-      fontSize: 7,
-      fontWeight: '900',
     },
 
     saveExtrasButton: {
