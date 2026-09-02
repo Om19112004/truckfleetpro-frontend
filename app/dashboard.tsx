@@ -320,10 +320,6 @@ const handleRefresh = async () => {
       
         {/* GREETING */}
         <View style={styles.greetingArea}>
-          <Text style={styles.greetingSmall}>
-            {t.goodMorning}
-          </Text>
-
           <Text style={styles.greetingTitle}>
             {language === 'hi'
               ? `वापसी पर स्वागत है, ${userName}`
