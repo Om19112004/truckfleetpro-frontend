@@ -48,27 +48,14 @@ type Trip = {
   truckNumber?: string;
   notes?: string;
 
-  diesel?: {
-    litres?: number | string;
-    rate?: number | string;
-    amount?: number | string;
-    odometer?: number | string;
-    fuelStation?: string;
-  };
 
   partyName?: string;
   freightAmount?: number | string;
-  paymentMode?: 'cash' | 'cheque' | 'online' | 'other';
-  paymentStatus?:
-    | 'pending'
-    | 'cheque_received'
-    | 'deposited'
-    | 'credited';
-  chequeNumber?: string;
-  chequeAmount?: number | string;
-  chequeReceivedDate?: string;
-  bankDepositDate?: string;
-  accountCreditDate?: string;
+  checklist?: {
+    chequeReceived?: boolean;
+    chequeDeposited?: boolean;
+    moneyReceived?: boolean;
+  };
 
   createdAt?: string;
 };
@@ -108,26 +95,14 @@ export default function TripsScreen() {
   const [distance, setDistance] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Trip-wise Diesel
-  const [dieselLitres, setDieselLitres] = useState('');
-  const [dieselRate, setDieselRate] = useState('');
-  const [dieselOdometer, setDieselOdometer] = useState('');
-  const [dieselFuelStation, setDieselFuelStation] = useState('');
-
-  // Trip-wise Payment
+  // Trip Details
   const [partyName, setPartyName] = useState('');
   const [freightAmount, setFreightAmount] = useState('');
-  const [paymentMode, setPaymentMode] = useState<
-    'cash' | 'cheque' | 'online' | 'other'
-  >('cheque');
-  const [paymentStatus, setPaymentStatus] = useState<
-    'pending' | 'cheque_received' | 'deposited' | 'credited'
-  >('pending');
-  const [chequeNumber, setChequeNumber] = useState('');
-  const [chequeAmount, setChequeAmount] = useState('');
-  const [chequeReceivedDate, setChequeReceivedDate] = useState('');
-  const [bankDepositDate, setBankDepositDate] = useState('');
-  const [accountCreditDate, setAccountCreditDate] = useState('');
+  const [checklist, setChecklist] = useState({
+    chequeReceived: false,
+    chequeDeposited: false,
+    moneyReceived: false,
+  });
 
   const [assignedDriver, setAssignedDriver] =
     useState<Driver | null>(null);
@@ -321,21 +296,13 @@ export default function TripsScreen() {
     setTripDate('');
     setDistance('');
     setNotes('');
-
-    setDieselLitres('');
-    setDieselRate('');
-    setDieselOdometer('');
-    setDieselFuelStation('');
-
     setPartyName('');
     setFreightAmount('');
-    setPaymentMode('cheque');
-    setPaymentStatus('pending');
-    setChequeNumber('');
-    setChequeAmount('');
-    setChequeReceivedDate('');
-    setBankDepositDate('');
-    setAccountCreditDate('');
+    setChecklist({
+      chequeReceived: false,
+      chequeDeposited: false,
+      moneyReceived: false,
+    });
   };
 
   const saveTrip = async () => {
@@ -369,99 +336,60 @@ export default function TripsScreen() {
         return;
       }
 
-     const parsedDate = parseTripDate(tripDate);
+      const parsedDate = parseTripDate(tripDate);
 
-if (!parsedDate) {
-  Alert.alert(
-    hi ? 'गलत तारीख' : 'Invalid date',
-    hi
-      ? 'कृपया तारीख DD/MM/YYYY format में डालें। उदाहरण: 28/08/2026'
-      : 'Please enter the date in DD/MM/YYYY format. Example: 28/08/2026'
-  );
+      if (!parsedDate) {
+        Alert.alert(
+          hi ? 'गलत तारीख' : 'Invalid date',
+          hi
+            ? 'कृपया तारीख DD/MM/YYYY format में डालें। उदाहरण: 28/08/2026'
+            : 'Please enter the date in DD/MM/YYYY format. Example: 28/08/2026'
+        );
+        return;
+      }
 
-  return;
-}
+      const parsedFreightAmount = freightAmount.trim()
+        ? Number(freightAmount)
+        : 0;
 
-const dieselAmount =
-  dieselLitres.trim() && dieselRate.trim()
-    ? Number(dieselLitres) * Number(dieselRate)
-    : undefined;
+      if (
+        Number.isNaN(parsedFreightAmount) ||
+        parsedFreightAmount < 0
+      ) {
+        Alert.alert(
+          hi ? 'गलत फ्रेट अमाउंट' : 'Invalid freight amount',
+          hi
+            ? 'कृपया सही फ्रेट अमाउंट डालें।'
+            : 'Please enter a valid freight amount.'
+        );
+        return;
+      }
 
-const payload = {
-  truckId: truckId || undefined,
-
-  driverId:
-    assignedDriver?._id ||
-    assignedDriver?.id ||
-    undefined,
-
-  from: from.trim(),
-
-  to: to.trim(),
-
-  startLocation: from.trim(),
-
-  endLocation: to.trim(),
-
-  date: parsedDate,
-
-  tripDate: parsedDate,
-
-  distance: distance.trim()
-    ? Number(distance)
-    : undefined,
-
-  status: 'scheduled',
-
-  notes: notes.trim() || undefined,
-
-  diesel:
-    dieselLitres.trim() ||
-    dieselRate.trim() ||
-    dieselOdometer.trim() ||
-    dieselFuelStation.trim()
-      ? {
-          litres: dieselLitres.trim()
-            ? Number(dieselLitres)
-            : undefined,
-          rate: dieselRate.trim()
-            ? Number(dieselRate)
-            : undefined,
-          amount: dieselAmount,
-          odometer: dieselOdometer.trim()
-            ? Number(dieselOdometer)
-            : undefined,
-          fuelStation:
-            dieselFuelStation.trim() || undefined,
-        }
-      : undefined,
-
-  partyName: partyName.trim() || undefined,
-
-  freightAmount: freightAmount.trim()
-    ? Number(freightAmount)
-    : undefined,
-
-  paymentMode,
-
-  paymentStatus,
-
-  chequeNumber:
-    chequeNumber.trim() || undefined,
-
-  chequeAmount: chequeAmount.trim()
-    ? Number(chequeAmount)
-    : undefined,
-
-  chequeReceivedDate:
-    chequeReceivedDate.trim() || undefined,
-
-  bankDepositDate:
-    bankDepositDate.trim() || undefined,
-
-  accountCreditDate:
-    accountCreditDate.trim() || undefined,
-};
+      const payload = {
+        truckId: truckId || undefined,
+        driverId:
+          assignedDriver?._id ||
+          assignedDriver?.id ||
+          undefined,
+        from: from.trim(),
+        to: to.trim(),
+        startLocation: from.trim(),
+        endLocation: to.trim(),
+        date: parsedDate,
+        tripDate: parsedDate,
+        distance: distance.trim()
+          ? Number(distance)
+          : undefined,
+        status: 'scheduled',
+        notes: notes.trim() || undefined,
+        partyName: partyName.trim(),
+        freightAmount: parsedFreightAmount,
+        checklist: {
+          chequeReceived: checklist.chequeReceived,
+          chequeDeposited: checklist.chequeDeposited,
+          moneyReceived: checklist.moneyReceived,
+        },
+      };
 
       const response = await fetch(
         `${API_URL}/api/trips`,
@@ -839,117 +767,31 @@ const payload = {
               multiline
             />
 
-            {/* DIESEL - TRIP WISE */}
+            {/* TRIP DETAILS */}
             <View style={styles.formSection}>
               <View style={styles.formSectionHeader}>
                 <View style={styles.formSectionIcon}>
                   <Ionicons
-                    name="water-outline"
+                    name="document-text-outline"
                     size={18}
-                    color={colors.warning}
+                    color={colors.primary}
                   />
                 </View>
-
                 <View style={styles.formSectionText}>
                   <Text style={styles.formSectionTitle}>
-                    {hi ? 'डीजल' : 'Diesel'}
+                    {hi ? 'ट्रिप विवरण' : 'Trip Details'}
                   </Text>
-
                   <Text style={styles.formSectionSubtitle}>
                     {hi
-                      ? 'इस ट्रिप का फ्यूल रिकॉर्ड'
-                      : 'Fuel record for this trip'}
-                  </Text>
-                </View>
-              </View>
-
-              <InputField
-                label="DIESEL (LITRES)"
-                placeholder="Example: 180"
-                value={dieselLitres}
-                onChangeText={setDieselLitres}
-                keyboardType="decimal-pad"
-                icon="water-outline"
-                colors={colors}
-                styles={styles}
-              />
-
-              <InputField
-                label="RATE / LITRE"
-                placeholder="Example: 92"
-                value={dieselRate}
-                onChangeText={setDieselRate}
-                keyboardType="decimal-pad"
-                icon="pricetag-outline"
-                colors={colors}
-                styles={styles}
-              />
-
-              <View style={styles.calculatedRow}>
-                <Text style={styles.calculatedLabel}>
-                  {hi ? 'डीजल कुल' : 'Diesel Total'}
-                </Text>
-
-                <Text style={styles.calculatedValue}>
-                  ₹
-                  {dieselLitres.trim() && dieselRate.trim()
-                    ? (
-                        Number(dieselLitres) *
-                        Number(dieselRate)
-                      ).toFixed(2)
-                    : '0.00'}
-                </Text>
-              </View>
-
-              <InputField
-                label="ODOMETER (KM)"
-                placeholder="Example: 125400"
-                value={dieselOdometer}
-                onChangeText={setDieselOdometer}
-                keyboardType="numeric"
-                icon="speedometer-outline"
-                colors={colors}
-                styles={styles}
-              />
-
-              <InputField
-                label="FUEL STATION"
-                placeholder="Fuel station name"
-                value={dieselFuelStation}
-                onChangeText={setDieselFuelStation}
-                icon="location-outline"
-                colors={colors}
-                styles={styles}
-              />
-            </View>
-
-            {/* PAYMENT - TRIP WISE */}
-            <View style={styles.formSection}>
-              <View style={styles.formSectionHeader}>
-                <View style={styles.formSectionIcon}>
-                  <Ionicons
-                    name="cash-outline"
-                    size={18}
-                    color={colors.success}
-                  />
-                </View>
-
-                <View style={styles.formSectionText}>
-                  <Text style={styles.formSectionTitle}>
-                    {hi ? 'पेमेंट' : 'Payment'}
-                  </Text>
-
-                  <Text style={styles.formSectionSubtitle}>
-                    {hi
-                      ? 'इस ट्रिप की पार्टी और भुगतान'
-                      : 'Party and payment for this trip'}
+                      ? 'पार्टी, फ्रेट और भुगतान चेकलिस्ट'
+                      : 'Party, freight and payment checklist'}
                   </Text>
                 </View>
               </View>
 
               <InputField
                 label="PARTY NAME"
-                placeholder="Party name"
+                placeholder={hi ? 'पार्टी का नाम' : 'Party name'}
                 value={partyName}
                 onChangeText={setPartyName}
                 icon="business-outline"
@@ -958,8 +800,8 @@ const payload = {
               />
 
               <InputField
-                label="FREIGHT / PAYMENT AMOUNT"
-                placeholder="Example: 70850"
+                label="FREIGHT AMOUNT"
+                placeholder={hi ? 'फ्रेट अमाउंट' : 'Example: 70850'}
                 value={freightAmount}
                 onChangeText={setFreightAmount}
                 keyboardType="decimal-pad"
@@ -969,141 +811,56 @@ const payload = {
               />
 
               <Text style={styles.choiceLabel}>
-                {hi ? 'PAYMENT MODE' : 'PAYMENT MODE'}
+                {hi ? 'CHECKLIST' : 'CHECKLIST'}
               </Text>
 
-              <View style={styles.choiceRow}>
-                {[
-                  ['cheque', hi ? 'चेक' : 'Cheque'],
-                  ['cash', hi ? 'कैश' : 'Cash'],
-                  ['online', hi ? 'ऑनलाइन' : 'Online'],
-                  ['other', hi ? 'अन्य' : 'Other'],
-                ].map(([value, label]) => (
+              {[
+                ['chequeReceived', hi ? 'चेक प्राप्त हुआ' : 'Cheque Received'],
+                ['chequeDeposited', hi ? 'चेक जमा हुआ' : 'Cheque Deposited'],
+                ['moneyReceived', hi ? 'पैसे प्राप्त हुए' : 'Money Received'],
+              ].map(([key, label]) => {
+                const checklistKey = key as keyof typeof checklist;
+                const checked = checklist[checklistKey];
+
+                return (
                   <Pressable
-                    key={value}
+                    key={key}
                     onPress={() =>
-                      setPaymentMode(
-                        value as
-                          | 'cash'
-                          | 'cheque'
-                          | 'online'
-                          | 'other'
-                      )
-                    }
-                    style={[
-                      styles.choiceButton,
-                      paymentMode === value &&
-                        styles.choiceButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.choiceButtonText,
-                        paymentMode === value &&
-                          styles.choiceButtonTextActive,
-                      ]}
-                    >
-                      {label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              {paymentMode === 'cheque' && (
-                <>
-                  <InputField
-                    label="CHEQUE NUMBER"
-                    placeholder="Cheque number"
-                    value={chequeNumber}
-                    onChangeText={setChequeNumber}
-                    icon="document-text-outline"
-                    colors={colors}
-                    styles={styles}
-                  />
-
-                  <InputField
-                    label="CHEQUE AMOUNT"
-                    placeholder="Example: 70850"
-                    value={chequeAmount}
-                    onChangeText={setChequeAmount}
-                    keyboardType="decimal-pad"
-                    icon="cash-outline"
-                    colors={colors}
-                    styles={styles}
-                  />
-
-                  <InputField
-                    label="CHEQUE RECEIVED DATE"
-                    placeholder="DD/MM/YYYY"
-                    value={chequeReceivedDate}
-                    onChangeText={setChequeReceivedDate}
-                    icon="calendar-outline"
-                    colors={colors}
-                    styles={styles}
-                  />
-
-                  <InputField
-                    label="BANK DEPOSIT DATE"
-                    placeholder="DD/MM/YYYY"
-                    value={bankDepositDate}
-                    onChangeText={setBankDepositDate}
-                    icon="business-outline"
-                    colors={colors}
-                    styles={styles}
-                  />
-
-                  <InputField
-                    label="ACCOUNT CREDIT DATE"
-                    placeholder="DD/MM/YYYY"
-                    value={accountCreditDate}
-                    onChangeText={setAccountCreditDate}
-                    icon="checkmark-circle-outline"
-                    colors={colors}
-                    styles={styles}
-                  />
-                </>
-              )}
-
-              <Text style={styles.choiceLabel}>
-                {hi ? 'PAYMENT STATUS' : 'PAYMENT STATUS'}
-              </Text>
-
-              <View style={styles.statusChoiceGrid}>
-                {[
-                  ['pending', 'Pending'],
-                  ['cheque_received', 'Cheque Received'],
-                  ['deposited', 'Deposited'],
-                  ['credited', 'Credited'],
-                ].map(([value, label]) => (
-                  <Pressable
-                    key={value}
-                    onPress={() =>
-                      setPaymentStatus(
-                        value as
-                          | 'pending'
-                          | 'cheque_received'
-                          | 'deposited'
-                          | 'credited'
-                      )
+                      setChecklist((current) => ({
+                        ...current,
+                        [checklistKey]: !current[checklistKey],
+                      }))
                     }
                     style={[
                       styles.statusChoice,
-                      paymentStatus === value &&
-                        styles.statusChoiceActive,
+                      checked && styles.statusChoiceActive,
                     ]}
                   >
+                    <Ionicons
+                      name={
+                        checked
+                          ? 'checkmark-circle'
+                          : 'ellipse-outline'
+                      }
+                      size={17}
+                      color={
+                        checked
+                          ? colors.success
+                          : colors.textSecondary
+                      }
+                    />
                     <Text
                       style={[
                         styles.statusChoiceText,
-                        paymentStatus === value &&
-                          styles.statusChoiceTextActive,
+                        checked && styles.statusChoiceTextActive,
+                        { marginLeft: 7 },
                       ]}
                     >
                       {label}
                     </Text>
                   </Pressable>
-                ))}
-              </View>
+                );
+              })}
             </View>
 
             <Pressable
@@ -1956,28 +1713,6 @@ const createStyles = (
       marginTop: 3,
     },
 
-    calculatedRow: {
-      minHeight: 45,
-      borderRadius: 12,
-      backgroundColor: colors.background,
-      paddingHorizontal: 12,
-      marginBottom: 13,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-
-    calculatedLabel: {
-      color: colors.textSecondary,
-      fontSize: 9,
-      fontWeight: '800',
-    },
-
-    calculatedValue: {
-      color: colors.success,
-      fontSize: 13,
-      fontWeight: '900',
-    },
 
     choiceLabel: {
       color: colors.textMuted,
@@ -1987,38 +1722,6 @@ const createStyles = (
       marginBottom: 7,
     },
 
-    choiceRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 7,
-      marginBottom: 14,
-    },
-
-    choiceButton: {
-      minHeight: 36,
-      paddingHorizontal: 11,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-
-    choiceButtonActive: {
-      borderColor: colors.primary,
-      backgroundColor: isDark ? '#172F4A' : '#EDF5FF',
-    },
-
-    choiceButtonText: {
-      color: colors.textSecondary,
-      fontSize: 9,
-      fontWeight: '800',
-    },
-
-    choiceButtonTextActive: {
-      color: colors.primary,
-    },
 
     statusChoiceGrid: {
       flexDirection: 'row',
