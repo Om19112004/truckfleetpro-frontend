@@ -1303,7 +1303,6 @@ const payload = {
               const driverName =
                 trip.driver?.name ||
                 trip.driverName ||
-                assignedDriver?.name ||
                 '--';
 
               const vehicle =
