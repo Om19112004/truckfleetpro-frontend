@@ -25,6 +25,15 @@ export default function AddTruckScreen() {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [capacity, setCapacity] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 2600);
+  };
 
   const handleAddTruck = async () => {
     if (!registrationNumber.trim() || !capacity.trim()) {
@@ -80,29 +89,32 @@ if (!token) {
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert(
-          language === 'hi' ? 'ट्रक नहीं जोड़ा जा सका' : 'Unable to add truck',
-          data.message || language === 'hi' ? 'कुछ गलत हो गया।' : 'Something went wrong.'
+        showToast(
+          'error',
+          data?.message ||
+            (language === 'hi' ? 'कुछ गलत हो गया।' : 'Something went wrong.')
         );
         return;
       }
 
-      Alert.alert(
-        language === 'hi' ? 'ट्रक जोड़ा गया' : 'Truck added',
-        language === 'hi' ? 'ट्रक आपकी फ्लीट में सफलतापूर्वक जोड़ दिया गया है।' : 'The truck has been successfully added to your fleet.',
-        [
-          {
-            text: language === 'hi' ? 'हो गया' : 'Done',
-            onPress: () => router.back(),
-          },
-        ]
+      showToast(
+        'success',
+        language === 'hi'
+          ? 'ट्रक सफलतापूर्वक जोड़ा गया'
+          : 'Truck added successfully'
       );
+
+      setTimeout(() => {
+        router.back();
+      }, 700);
     } catch (error) {
       console.error('Add truck error:', error);
 
-      Alert.alert(
-        language === 'hi' ? 'कनेक्शन त्रुटि' : 'Connection error',
-        language === 'hi' ? 'सर्वर से कनेक्ट नहीं हो सका। सुनिश्चित करें कि backend चल रहा है और आपका फोन और लैपटॉप एक ही Wi-Fi से जुड़े हैं।' : 'Unable to connect to the server. Make sure the backend is running and your phone and laptop are connected to the same Wi-Fi.'
+      showToast(
+        'error',
+        language === 'hi'
+          ? 'सर्वर से कनेक्ट नहीं हो सका'
+          : 'Unable to connect to the server'
       );
     } finally {
       setLoading(false);
@@ -115,6 +127,29 @@ if (!token) {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {toast && (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.toast,
+              toast.type === 'success'
+                ? styles.toastSuccess
+                : styles.toastError,
+            ]}
+          >
+            <Ionicons
+              name={
+                toast.type === 'success'
+                  ? 'checkmark-circle'
+                  : 'alert-circle'
+              }
+              size={21}
+              color="#FFFFFF"
+            />
+            <Text style={styles.toastText}>{toast.message}</Text>
+          </View>
+        )}
+
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
@@ -416,6 +451,44 @@ const createStyles = (
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
+  },
+
+  toast: {
+    position: 'absolute',
+    top: Platform.OS === 'web' ? 20 : 54,
+    left: 18,
+    right: 18,
+    zIndex: 100,
+    minHeight: 52,
+    borderRadius: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+
+  toastSuccess: {
+    backgroundColor: '#16A34A',
+  },
+
+  toastError: {
+    backgroundColor: '#DC2626',
+  },
+
+  toastText: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    marginLeft: 10,
   },
 
   security: {

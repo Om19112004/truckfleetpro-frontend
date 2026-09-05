@@ -29,6 +29,15 @@ export default function AddDriverScreen() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 2600);
+  };
 
   const hi = language === 'hi';
 
@@ -73,34 +82,32 @@ export default function AddDriverScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert(
-          hi ? 'ड्राइवर नहीं जोड़ा जा सका' : 'Unable to add driver',
-          data.message ||
+        showToast(
+          'error',
+          data?.message ||
             (hi ? 'कुछ गलत हो गया।' : 'Something went wrong.')
         );
         return;
       }
 
-      Alert.alert(
-        hi ? 'ड्राइवर जोड़ा गया' : 'Driver Added',
+      showToast(
+        'success',
         hi
-          ? 'ड्राइवर सफलतापूर्वक आपकी फ्लीट में जोड़ दिया गया है।'
-          : 'Driver has been successfully added.',
-        [
-          {
-            text: hi ? 'हो गया' : 'OK',
-            onPress: () => router.back(),
-          },
-        ]
+          ? 'ड्राइवर सफलतापूर्वक जोड़ा गया'
+          : 'Driver added successfully'
       );
+
+      setTimeout(() => {
+        router.back();
+      }, 700);
     } catch (error) {
       console.error('Add driver error:', error);
 
-      Alert.alert(
-        hi ? 'कनेक्शन त्रुटि' : 'Connection Error',
+      showToast(
+        'error',
         hi
-          ? 'सर्वर से कनेक्ट नहीं हो सका। कृपया backend और Wi-Fi connection जांचें।'
-          : 'Unable to connect to the server. Please check the backend and Wi-Fi connection.'
+          ? 'सर्वर से कनेक्ट नहीं हो सका'
+          : 'Unable to connect to the server'
       );
     } finally {
       setLoading(false);
@@ -113,6 +120,29 @@ export default function AddDriverScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {toast && (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.toast,
+              toast.type === 'success'
+                ? styles.toastSuccess
+                : styles.toastError,
+            ]}
+          >
+            <Ionicons
+              name={
+                toast.type === 'success'
+                  ? 'checkmark-circle'
+                  : 'alert-circle'
+              }
+              size={21}
+              color="#FFFFFF"
+            />
+            <Text style={styles.toastText}>{toast.message}</Text>
+          </View>
+        )}
+
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
@@ -449,6 +479,44 @@ const createStyles = (
       color: '#FFFFFF',
       fontSize: 15,
       fontWeight: '900',
+    },
+
+    toast: {
+      position: 'absolute',
+      top: Platform.OS === 'web' ? 20 : 54,
+      left: 18,
+      right: 18,
+      zIndex: 100,
+      minHeight: 52,
+      borderRadius: 15,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      shadowColor: '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      shadowOpacity: 0.18,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+
+    toastSuccess: {
+      backgroundColor: '#16A34A',
+    },
+
+    toastError: {
+      backgroundColor: '#DC2626',
+    },
+
+    toastText: {
+      flex: 1,
+      color: '#FFFFFF',
+      fontSize: 13,
+      fontWeight: '800',
+      marginLeft: 10,
     },
 
     security: {

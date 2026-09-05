@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -108,6 +109,15 @@ export default function TripsScreen() {
     useState<Driver | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 2600);
+  };
 
   const getTrips = async (showLoader = true) => {
     try {
@@ -415,11 +425,11 @@ export default function TripsScreen() {
         );
       }
 
-      Alert.alert(
-        hi ? 'ट्रिप सेव हो गई' : 'Trip created',
+      showToast(
+        'success',
         hi
-          ? 'नई ट्रिप सफलतापूर्वक सेव हो गई।'
-          : 'The new trip has been created successfully.'
+          ? 'ट्रिप सफलतापूर्वक सेव हो गई'
+          : 'Trip created successfully'
       );
 
       resetForm();
@@ -428,8 +438,8 @@ export default function TripsScreen() {
     } catch (error) {
       console.error('Save trip error:', error);
 
-      Alert.alert(
-        hi ? 'ट्रिप सेव नहीं हुई' : 'Trip not saved',
+      showToast(
+        'error',
         error instanceof Error
           ? error.message
           : hi
@@ -521,6 +531,29 @@ export default function TripsScreen() {
 
   return (
     <View style={styles.screen}>
+      {toast && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            toast.type === 'success'
+              ? styles.toastSuccess
+              : styles.toastError,
+          ]}
+        >
+          <Ionicons
+            name={
+              toast.type === 'success'
+                ? 'checkmark-circle'
+                : 'alert-circle'
+            }
+            size={21}
+            color="#FFFFFF"
+          />
+          <Text style={styles.toastText}>{toast.message}</Text>
+        </View>
+      )}
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -1667,6 +1700,14 @@ const createStyles = (
       color: colors.text,
       fontSize: 12,
       paddingVertical: 0,
+      ...(Platform.OS === 'web'
+        ? ({
+            outlineStyle: 'none',
+            outlineWidth: 0,
+            outlineColor: 'transparent',
+            boxShadow: 'none',
+          } as any)
+        : {}),
     },
 
     multilineInput: {
@@ -1791,6 +1832,12 @@ const createStyles = (
       color: colors.text,
       fontSize: 12,
       marginLeft: 9,
+      ...(Platform.OS === 'web'
+        ? ({
+            outlineStyle: 'none',
+            outlineWidth: 0,
+          } as any)
+        : {}),
     },
 
     sectionHeader: {
@@ -2046,6 +2093,44 @@ const createStyles = (
     buttonPressed: {
       opacity: 0.78,
       transform: [{ scale: 0.98 }],
+    },
+
+    toast: {
+      position: 'absolute',
+      top: Platform.OS === 'web' ? 20 : 54,
+      left: 18,
+      right: 18,
+      zIndex: 100,
+      minHeight: 52,
+      borderRadius: 15,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      shadowColor: '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+      shadowOpacity: 0.18,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+
+    toastSuccess: {
+      backgroundColor: '#16A34A',
+    },
+
+    toastError: {
+      backgroundColor: '#DC2626',
+    },
+
+    toastText: {
+      flex: 1,
+      color: '#FFFFFF',
+      fontSize: 13,
+      fontWeight: '800',
+      marginLeft: 10,
     },
 
     footer: {

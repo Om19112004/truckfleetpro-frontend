@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -805,7 +806,7 @@ export default function TrucksScreen() {
                   )}
 
                   {/* ADDRESS */}
-                  {truck.address && (
+                  {Boolean(truck.address) && (
                     <View style={styles.addressRow}>
                       <Ionicons
                         name="location-outline"
@@ -1169,6 +1170,12 @@ const createStyles = (
       color: colors.text,
       fontSize: 13,
       marginLeft: 10,
+      ...(Platform.OS === 'web'
+        ? ({
+            outlineStyle: 'none',
+            outlineWidth: 0,
+          } as any)
+        : {}),
     },
 
     sectionHeader: {
