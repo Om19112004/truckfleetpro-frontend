@@ -19,42 +19,70 @@ type ThemeColors = {
   warning: string;
   danger: string;
   info: string;
+  // Soft tint backgrounds for badges/icon chips (paired with the solid tone above).
+  primarySoft: string;
+  successSoft: string;
+  warningSoft: string;
+  dangerSoft: string;
+  infoSoft: string;
+  // Stronger border for emphasis (dividers that need to stand out slightly more).
+  borderStrong: string;
+  // Scrim behind sheets/drawers/modals.
+  overlay: string;
+  // Constant shadow tint used across both themes (opacity is varied per-platform at the call site).
+  shadow: string;
 };
 
 const lightColors: ThemeColors = {
-  background: '#F3F6FA',
+  background: '#F2F5F7',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
-  text: '#0F172A',
-  textSecondary: '#475569',
-  textMuted: '#94A3B8',
-  border: '#E2E8F0',
-  input: '#F8FAFC',
-  success: '#059669',
-  warning: '#D97706',
-  danger: '#DC2626',
-  info: '#0891B2',
+  primary: '#0B7285',
+  primaryDark: '#075985',
+  text: '#12212B',
+  textSecondary: '#52636D',
+  textMuted: '#84939B',
+  border: '#D9E2E6',
+  input: '#F7FAFB',
+  success: '#138A72',
+  warning: '#C47A16',
+  danger: '#C54848',
+  info: '#187C9B',
+  primarySoft: '#E2F3F1',
+  successSoft: '#E4F5EF',
+  warningSoft: '#FBF0DD',
+  dangerSoft: '#FBECEC',
+  infoSoft: '#E3F1F6',
+  borderStrong: '#C3D1D6',
+  overlay: 'rgba(15, 27, 32, 0.42)',
+  shadow: '#0F1B20',
 };
 
 const darkColors: ThemeColors = {
-  background: '#07111F',
-  surface: '#0D1B2A',
-  surfaceElevated: '#122337',
-  card: '#102235',
-  primary: '#3B82F6',
-  primaryDark: '#60A5FA',
-  text: '#F8FAFC',
-  textSecondary: '#CBD5E1',
-  textMuted: '#7C8DA3',
-  border: '#1E344B',
-  input: '#0A1828',
-  success: '#34D399',
-  warning: '#FBBF24',
-  danger: '#F87171',
-  info: '#22D3EE',
+  background: '#081317',
+  surface: '#102126',
+  surfaceElevated: '#162D33',
+  card: '#12282E',
+  primary: '#35B8B0',
+  primaryDark: '#7AD6CB',
+  text: '#F3F8F8',
+  textSecondary: '#B6C8CA',
+  textMuted: '#769093',
+  border: '#25434A',
+  input: '#0C1C20',
+  success: '#47C99E',
+  warning: '#E5B75D',
+  danger: '#F08383',
+  info: '#65C6D3',
+  primarySoft: '#163B40',
+  successSoft: '#123A34',
+  warningSoft: '#3D3216',
+  dangerSoft: '#3A2024',
+  infoSoft: '#153238',
+  borderStrong: '#345157',
+  overlay: 'rgba(3, 9, 11, 0.62)',
+  shadow: '#000000',
 };
 
 type ThemeContextType = {

@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -19,37 +20,51 @@ export default function SettingsScreen() {
 
   const styles = createStyles(colors, isDark);
 
-  const handleLogout = () => {
-    Alert.alert(
-      language === 'hi' ? 'लॉग आउट करें?' : 'Log out?',
-      language === 'hi'
-        ? 'क्या आप इस अकाउंट से लॉग आउट करना चाहते हैं?'
-        : 'Are you sure you want to log out of this account?',
-      [
-        {
-          text: language === 'hi' ? 'रद्द करें' : 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: language === 'hi' ? 'लॉग आउट' : 'Log out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.multiRemove(['authToken', 'user']);
-              router.replace('/');
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert(
-                language === 'hi' ? 'लॉग आउट विफल' : 'Logout failed',
-                language === 'hi'
-                  ? 'कृपया दोबारा प्रयास करें।'
-                  : 'Please try again.'
-              );
-            }
+  const handleLogout = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        const confirmed = window.confirm(
+          language === 'hi'
+            ? 'क्या आप इस अकाउंट से लॉग आउट करना चाहते हैं?'
+            : 'Are you sure you want to log out of this account?'
+        );
+
+        if (!confirmed) {
+          return;
+        }
+
+        await AsyncStorage.multiRemove(['authToken', 'user']);
+        router.replace('/');
+        return;
+      }
+
+      Alert.alert(
+        language === 'hi' ? 'लॉग आउट करें?' : 'Log out?',
+        language === 'hi'
+          ? 'क्या आप इस अकाउंट से लॉग आउट करना चाहते हैं?'
+          : 'Are you sure you want to log out of this account?',
+        [
+          {
+            text: language === 'hi' ? 'रद्द करें' : 'Cancel',
+            style: 'cancel',
           },
-        },
-      ]
-    );
+          {
+            text: language === 'hi' ? 'लॉग आउट' : 'Log out',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await AsyncStorage.multiRemove(['authToken', 'user']);
+                router.replace('/');
+              } catch (error) {
+                console.error('Logout error:', error);
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -504,7 +519,7 @@ const createStyles = (
       width: 49,
       height: 49,
       borderRadius: 16,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.primaryDark,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -602,7 +617,7 @@ const createStyles = (
       width: 47,
       height: 47,
       borderRadius: 15,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.primaryDark,
       alignItems: 'center',
       justifyContent: 'center',
     },

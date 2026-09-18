@@ -376,12 +376,12 @@ const createStyles = (
       width: 64,
       height: 64,
       borderRadius: 21,
-      backgroundColor: isDark ? '#172F4A' : '#DBEAFE',
+      backgroundColor: isDark ? '#163B40' : '#E2F3F1',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 18,
       borderWidth: 1,
-      borderColor: isDark ? '#23496C' : '#BFDBFE',
+      borderColor: isDark ? '#285B60' : '#B9DEDA',
     },
 
     title: {
@@ -504,7 +504,7 @@ const createStyles = (
     },
 
     toastSuccess: {
-      backgroundColor: '#16A34A',
+      backgroundColor: '#138A72',
     },
 
     toastError: {

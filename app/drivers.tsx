@@ -1489,8 +1489,8 @@ const createStyles = (
       height: 31,
       borderRadius: 10,
       backgroundColor: isDark
-        ? '#172F4A'
-        : '#EDF5FF',
+        ? '#163B40'
+        : '#E2F3F1',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 7,
@@ -1654,8 +1654,8 @@ const createStyles = (
       height: 40,
       borderRadius: 13,
       backgroundColor: isDark
-        ? '#172F4A'
-        : '#EDF5FF',
+        ? '#163B40'
+        : '#E2F3F1',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -1722,7 +1722,7 @@ const createStyles = (
       width: 38,
       height: 38,
       borderRadius: 12,
-      backgroundColor: isDark ? '#172F4A' : '#EDF5FF',
+      backgroundColor: isDark ? '#163B40' : '#E2F3F1',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 12,
@@ -1959,8 +1959,8 @@ const createStyles = (
       height: 65,
       borderRadius: 21,
       backgroundColor: isDark
-        ? '#172F4A'
-        : '#EDF5FF',
+        ? '#163B40'
+        : '#E2F3F1',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 15,

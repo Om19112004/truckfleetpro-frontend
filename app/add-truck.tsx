@@ -358,7 +358,7 @@ const createStyles = (
     width: 62,
     height: 62,
     borderRadius: 20,
-    backgroundColor: isDark ? '#172F4A' : '#DBEAFE',
+    backgroundColor: isDark ? '#163B40' : '#E2F3F1',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
@@ -476,7 +476,7 @@ const createStyles = (
   },
 
   toastSuccess: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#138A72',
   },
 
   toastError: {
